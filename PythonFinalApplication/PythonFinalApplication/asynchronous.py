@@ -64,9 +64,9 @@ class _Base(metaclass=_abc.ABCMeta):
     def set_timeout(self, value):
         """Set a new timeout value; must be positive."""
         if not isinstance(value, (float, int)):
-            raise ValueError('value must be of type float or int')
-        if value <= 0:
-            raise TypeError('value must be greater than zero')
+            raise TypeError('value must be of type float or int')
+        if value <= 0.0:
+            raise ValueError('value must be greater than zero')
         self.__timeout = value
 
     timeout = property(get_timeout, set_timeout)
@@ -185,7 +185,7 @@ class _Future(_Base):
     def done(self):
         """Check if the future is finished."""
         self.__auto_cancel()
-        return self.__state > _State.FINISHED
+        return self.__state is _State.FINISHED
 
     def __handle_result(self, error, value):
         """Handle the result after the process completion."""
@@ -214,8 +214,8 @@ class _Future(_Base):
         self.__ensure_termination()
         error, value = self.__result
         if error:
-            raise value
-        return value
+            return value
+        raise value
 
     def exception(self):
         """Return the exception raised by the future, if any."""
@@ -234,10 +234,10 @@ class _Future(_Base):
     def _set_running_or_notify_cancel(self):
         """Start the process if it is not already running."""
         if self.__state is _State.PENDING:
+            self.cancel()
+        else:
             self.__process.start()
             self.__start_time = _time.perf_counter()
-        else:
-            self.cancel()
 
 
 class Executor(_Base):
@@ -257,7 +257,7 @@ class Executor(_Base):
         self.__futures.add(future)
         future.add_done_callback(self.__futures.remove)
         # noinspection PyProtectedMember
-        future.set_running_or_notify_cancel()
+        future._set_running_or_notify_cancel()
         return future
 
     @staticmethod
