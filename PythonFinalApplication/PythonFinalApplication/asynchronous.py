@@ -214,8 +214,8 @@ class _Future(_Base):
         self.__ensure_termination()
         error, value = self.__result
         if error:
-            return value
-        raise value
+            raise value
+        return value
 
     def exception(self):
         """Return the exception raised by the future, if any."""
@@ -234,10 +234,10 @@ class _Future(_Base):
     def _set_running_or_notify_cancel(self):
         """Start the process if it is not already running."""
         if self.__state is _State.PENDING:
-            self.cancel()
-        else:
             self.__process.start()
             self.__start_time = _time.perf_counter()
+        else:
+            self.cancel()
 
 
 class Executor(_Base):
